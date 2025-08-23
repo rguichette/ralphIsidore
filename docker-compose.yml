@@ -1,13 +1,13 @@
 version: "3.9"
 services:
   web:
-    image: ghcr.io/owner/repo:latest
+    build: .
+    image: nextapp:local
     environment:
       - NODE_ENV=production
-      - HOSTNAME=0.0.0.0   # ensure Next binds all interfaces
-      # (no PORT var; Next will use 3000 internally)
+      - PORT=3000
+
     ports:
-      - "80:3000"          # host 80 -> container 3000
-    restart: always
-    env_file:
-      - /opt/nextapp/.env
+      - "80:3000"
+
+
