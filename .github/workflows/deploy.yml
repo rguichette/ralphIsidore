@@ -3,39 +3,59 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write   # push to GHCR
-    env:
-      IMAGE: ghcr.io/${{ github.repository_owner }}/$(echo "${{ github.repository }}" | cut -d/ -f2):sha-${{ github.sha }}
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build & push image
+      # 1) Compute a lowercase GHCR image name once (owner/repo:sha-<commit>)
+      - name: Compute image name
+        id: meta
         run: |
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
+          REPO_LC="${GITHUB_REPOSITORY,,}"                      # owner/repo -> lowercase
+          echo "image=ghcr.io/${REPO_LC}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
+      # 2) Build & push the image to GHCR
+      - name: Build and push image
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker build -t "${{ steps.meta.outputs.image }}" .
+          docker push "${{ steps.meta.outputs.image }}"
+
+      # 3) SSH into the Droplet and redeploy with the new image tag
       - name: SSH redeploy on Droplet
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
-          port: 443
-          # port: 22   # uncomment/change if you run SSH on a different port
+          # If you're using 443 for SSH, set a DO_SSH_PORT secret to 443. Otherwise, remove this line.
+          port: ${{ secrets.DO_SSH_PORT }}
           script: |
-            IMAGE="${{ env.IMAGE }}"
-            # Pull the just-pushed image using this run's token
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            set -euo pipefail
+            IMAGE="${{ steps.meta.outputs.image }}"
+            FILE="/opt/nextapp/docker-compose.yml"
+
+            # login & pull the new image
+            docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
             docker pull "$IMAGE"
-            # Update compose to the unique tag for this deploy
-            sed -i "s#image: .*#image: $IMAGE#g" /opt/nextapp/docker-compose.yml
-            docker compose -f /opt/nextapp/docker-compose.yml down
-            docker compose -f /opt/nextapp/docker-compose.yml up -d --force-recreate
+
+            # Replace the image line in compose (use POSIX class, not \s)
+            if grep -qE '^[[:space:]]*image:' "$FILE"; then
+              sed -i "s#^[[:space:]]*image: .*#    image: $IMAGE#" "$FILE"
+            else
+              # fallback: inject image under 'web:' if missing (simple append)
+              echo "    image: $IMAGE" >> "$FILE"
+            fi
+
+            docker compose -f "$FILE" up -d --force-recreate
+            docker image prune -f
