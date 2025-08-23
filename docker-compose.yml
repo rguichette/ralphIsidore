@@ -1,13 +1,12 @@
 version: "3.9"
 services:
   web:
-    build: .
-    image: nextapp:local
+    image: ghcr.io/owner/repo:latest   # will be overwritten to a SHA tag by the workflow
+    restart: always
+    env_file:
+      - /opt/nextapp/.env
     environment:
       - NODE_ENV=production
       - PORT=5080
-
     ports:
       - "5080:5080"
-
-
