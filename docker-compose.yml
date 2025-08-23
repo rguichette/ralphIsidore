@@ -9,4 +9,4 @@ services:
       - NODE_ENV=production
       - PORT=5080
     ports:
-      - "5080:5080"
+      - "80:5080"
