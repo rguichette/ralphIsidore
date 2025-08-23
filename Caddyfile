@@ -1,0 +1,6 @@
+sudo tee /opt/nextapp/Caddyfile >/dev/null <<'EOF'
+ralphisidore.com, www.ralphisidore.com {
+  encode gzip
+  reverse_proxy web:3000
+}
+EOF
