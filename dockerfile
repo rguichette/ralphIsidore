@@ -1,27 +1,31 @@
-# deps
+# --- deps ---
 FROM node:22-alpine3.20 AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# build
+# --- build ---
 FROM node:22-alpine3.20 AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# ensure public/ exists even if your repo doesn't have it
+RUN mkdir -p public
 RUN npm run build
 
-# run
+# --- run ---
 FROM node:22-alpine3.20 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-# (Optional) pull in patched OS libs if the scanner still flags something:
-RUN apk update && apk upgrade --no-cache
+ENV PORT=5080
+# (optional) keep base libs patched
+# RUN apk update && apk upgrade --no-cache
+
+# copy Next.js standalone output
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
-EXPOSE 3000
+COPY --from=builder /app/public ./public
+
+EXPOSE 5080
 USER node
 CMD ["node", "server.js"]
-
-
