@@ -7,6 +7,6 @@ services:
       - /opt/nextapp/.env
     environment:
       - NODE_ENV=production
-      - PORT=5080
+      - PORT=80
     ports:
       - "80:5080"
