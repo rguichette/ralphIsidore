@@ -17,14 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Compute a lowercase GHCR image name once (owner/repo:sha-<commit>)
-      - name: Compute image name
-        id: meta
-        run: |
-          REPO_LC="${GITHUB_REPOSITORY,,}"                      # owner/repo -> lowercase
-          echo "image=ghcr.io/${REPO_LC}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-
-      # 2) Build & push the image to GHCR
+      # Build & push image to GHCR with :latest
       - name: Build and push image
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:latest"
@@ -32,7 +25,7 @@ jobs:
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
-      # 3) SSH into the Droplet and redeploy with the new image tag
+      # SSH into Droplet and redeploy
       - name: SSH redeploy on Droplet
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -41,24 +34,14 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_SSH_PORT }}
           script: |
-            set -euo pipefail
-            IMAGE="${{ steps.meta.outputs.image }}"
-            APP_DIR=/opt/nextapp/app
-
-            # first time setup: clone repo
-            if [ ! -d "$APP_DIR/.git" ]; then
-              mkdir -p /opt/nextapp
-              git clone https://github.com/${{ github.repository }} "$APP_DIR"
-            fi
-
-            cd "$APP_DIR"
+            set -e
+            cd /opt/nextapp/app   # repo clone path
             git fetch origin
             git reset --hard origin/main
 
-            # login & pull the new app image
+            IMAGE="ghcr.io/${{ github.repository,, }}:latest"
+
             docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
             docker pull "$IMAGE"
-
-            # run compose exactly as in repo (caddy will still be caddy:2)
             docker compose up -d --force-recreate --remove-orphans
             docker image prune -f
