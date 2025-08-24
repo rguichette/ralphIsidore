@@ -1,15 +1,15 @@
-
+# /opt/nextapp/docker-compose.yml
 services:
   web:
-    image: ghcr.io/<OWNER>/<REPO>:latest
+    image: ghcr.io/rguichette/ralphisidore:sha-433d3f21d482a8d74bd15a793354f36e3ad03469
     restart: always
     env_file: [/opt/nextapp/.env]
     environment:
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
-      # Next defaults to 3000 inside; no need to set PORT
+      - PORT=3000
     expose:
-      - "3000"            # internal only (no host port)
+      - "3000"
 
   caddy:
     image: caddy:2
