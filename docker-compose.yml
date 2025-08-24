@@ -1,28 +1,13 @@
-# /opt/nextapp/docker-compose.yml
+
 services:
   web:
-    image: ghcr.io/rguichette/ralphisidore:sha-433d3f21d482a8d74bd15a793354f36e3ad03469
-    restart: always
-    env_file: [/opt/nextapp/.env]
+    build: .
+    image: nextapp:local
     environment:
       - NODE_ENV=production
-      - HOSTNAME=0.0.0.0
       - PORT=3000
-    expose:
-      - "3000"
 
-  caddy:
-    image: caddy:2
-    depends_on: [web]
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /opt/nextapp/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    restart: unless-stopped
+      - "80:3000"
 
-volumes:
-  caddy_data:
-  caddy_config:
+
