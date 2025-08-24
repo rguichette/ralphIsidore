@@ -17,45 +17,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1) Compute a lowercase GHCR image name once (owner/repo:sha-<commit>)
+      # 1) Compute lowercase repo path (ghcr requires lowercase)
       - name: Compute image name
         id: meta
         run: |
-          REPO_LC="${GITHUB_REPOSITORY,,}"                      # owner/repo -> lowercase
-          echo "image=ghcr.io/${REPO_LC}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          REPO_LC="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "repo_lc=$REPO_LC" >> "$GITHUB_OUTPUT"
 
-      # 2) Build & push the image to GHCR
+      # 2) Build & push image to GHCR
       - name: Build and push image
         run: |
+          IMAGE="${{ steps.meta.outputs.repo_lc }}:latest"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker build -t "${{ steps.meta.outputs.image }}" .
-          docker push "${{ steps.meta.outputs.image }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
 
-      # 3) SSH into the Droplet and redeploy with the new image tag
+      # 3) SSH into the Droplet, pull repo + redeploy with updated compose
       - name: SSH redeploy on Droplet
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
-          # If you're using 443 for SSH, set a DO_SSH_PORT secret to 443. Otherwise, remove this line.
           port: ${{ secrets.DO_SSH_PORT }}
           script: |
-            set -euo pipefail
-            IMAGE="${{ steps.meta.outputs.image }}"
-            FILE="/opt/nextapp/docker-compose.yml"
+            set -e
+            APP_DIR=/opt/nextapp/app
+            REPO="${{ github.repository }}"
+            IMAGE="ghcr.io/${REPO,,}:latest"
 
-            # login & pull the new image
-            docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
-            docker pull "$IMAGE"
-
-            # Replace the image line in compose (use POSIX class, not \s)
-            if grep -qE '^[[:space:]]*image:' "$FILE"; then
-              sed -i "s#^[[:space:]]*image: .*#    image: $IMAGE#" "$FILE"
-            else
-              # fallback: inject image under 'web:' if missing (simple append)
-              echo "    image: $IMAGE" >> "$FILE"
+            # Clone repo first time only
+            if [ ! -d "$APP_DIR/.git" ]; then
+              mkdir -p /opt/nextapp
+              git clone "https://github.com/$REPO" "$APP_DIR"
             fi
 
-            docker compose -f "$FILE" up -d --force-recreate
+            cd "$APP_DIR"
+            git fetch origin
+            git reset --hard origin/main
+
+            # pull latest image and run compose from repo
+            docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
+            docker pull "$IMAGE"
+            docker compose up -d --force-recreate --remove-orphans
             docker image prune -f
