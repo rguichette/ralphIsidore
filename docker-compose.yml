@@ -1,13 +1,28 @@
 
 services:
   web:
-    build: .
-    image: nextapp:local
+    image: ghcr.io/<OWNER>/<REPO>:latest
+    restart: always
+    env_file: [/opt/nextapp/.env]
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      # Next defaults to 3000 inside; no need to set PORT
+    expose:
+      - "3000"            # internal only (no host port)
 
+  caddy:
+    image: caddy:2
+    depends_on: [web]
     ports:
-      - "80:3000"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/nextapp/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
 
-
+volumes:
+  caddy_data:
+  caddy_config:
