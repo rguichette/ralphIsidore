@@ -38,24 +38,26 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
-          # If you're using 443 for SSH, set a DO_SSH_PORT secret to 443. Otherwise, remove this line.
           port: ${{ secrets.DO_SSH_PORT }}
           script: |
             set -euo pipefail
             IMAGE="${{ steps.meta.outputs.image }}"
-            FILE="/opt/nextapp/docker-compose.yml"
+            APP_DIR=/opt/nextapp/app
 
-            # login & pull the new image
+            # first time setup: clone repo
+            if [ ! -d "$APP_DIR/.git" ]; then
+              mkdir -p /opt/nextapp
+              git clone https://github.com/${{ github.repository }} "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin
+            git reset --hard origin/main
+
+            # login & pull the new app image
             docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
             docker pull "$IMAGE"
 
-            # Replace the image line in compose (use POSIX class, not \s)
-            if grep -qE '^[[:space:]]*image:' "$FILE"; then
-              sed -i "s#^[[:space:]]*image: .*#    image: $IMAGE#" "$FILE"
-            else
-              # fallback: inject image under 'web:' if missing (simple append)
-              echo "    image: $IMAGE" >> "$FILE"
-            fi
-
-            docker compose -f "$FILE" up -d --force-recreate
+            # run compose exactly as in repo (caddy will still be caddy:2)
+            docker compose up -d --force-recreate --remove-orphans
             docker image prune -f
