@@ -20,7 +20,9 @@ jobs:
       # Build & push image to GHCR with :latest
       - name: Build and push image
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:latest"
+          REPO_LC="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          IMAGE="ghcr.io/${REPO_LC}:latest"
+          echo "Using image: $IMAGE"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
@@ -39,7 +41,9 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
-            IMAGE="ghcr.io/${{ github.repository,, }}:latest"
+            REPO_LC="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+            IMAGE="ghcr.io/${REPO_LC}:latest"
+            echo "Deploying $IMAGE"
 
             docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
             docker pull "$IMAGE"
