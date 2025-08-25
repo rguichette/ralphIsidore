@@ -19,9 +19,11 @@ jobs:
 
       # Build & push image to GHCR with :latest
       - name: Build and push image
+        id: build
         run: |
           REPO_LC="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
           IMAGE="ghcr.io/${REPO_LC}:latest"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "Using image: $IMAGE"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker build -t "$IMAGE" .
@@ -35,14 +37,14 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_SSH_PORT }}
+          envs: IMAGE
           script: |
             set -e
             cd /opt/nextapp/app   # repo clone path
             git fetch origin
             git reset --hard origin/main
 
-            REPO_LC="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
-            IMAGE="ghcr.io/${REPO_LC}:latest"
+            IMAGE="${{ steps.build.outputs.image }}"
             echo "Deploying $IMAGE"
 
             docker login ghcr.io -u "${{ github.actor }}" -p "${{ secrets.GITHUB_TOKEN }}"
