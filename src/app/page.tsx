@@ -1,4 +1,4 @@
-import HeaderIntro from "./components/headerIntro";
+// import HeaderIntro from "./components/headerIntro";
 
 export default function Page() {
   return (
