@@ -19,6 +19,8 @@
       }
     ],
     "paths": {
+        "@repo/shadcn-ui/lib/utils": ["./src/lib/utils.ts"],
+
       "@/*": ["./src/*"]
     }
   },

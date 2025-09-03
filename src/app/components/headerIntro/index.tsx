@@ -4,6 +4,7 @@
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import BoldStatement from "../BoldStatement";
+import WaveBg from "../WaveBg";
 // const FiberWaves = dynamic(() => import("@/components/ui/shadcn-io/fiber-waves"), { ssr: false });
 
 export default function Hero() {
@@ -17,6 +18,7 @@ export default function Hero() {
           distance={0.3}
           enableMouseInteraction
         /> */}
+        <WaveBg/>
       </div>
       {/* veil shouldn't block pointer events */}
       <div className="absolute inset-0 bg-black/50 pointer-events-none" />

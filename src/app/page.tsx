@@ -1,4 +1,4 @@
-// import HeaderIntro from "./components/headerIntro";
+import HeaderIntro from "./components/headerIntro";
 
 export default function Page() {
   return (
@@ -25,7 +25,7 @@ export default function Page() {
     text-white
   "
 >
-  {/* <HeaderIntro /> */}
+  <HeaderIntro />
 </div>
 
     </main>
