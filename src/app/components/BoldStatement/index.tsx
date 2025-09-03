@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-
+import { todo } from "node:test";
+//TODO: Handle view summary 
      export default function BoldStatement(){
         return(     <div className="relative z-10 w-full pointer-events-none px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 py-10 md:py-16">
         {/* edge-to-edge on laptop+, but keep rounded on big screens */}
@@ -27,6 +28,11 @@ import { Button } from "@/components/ui/button";
           </div>
             <p className="mt-4 text-slate-600">view summary</p>
         </div>
+       
+        {/* <div >
+<p className="mt-4 flex wrap-break-word">Self-taught software developer with 3+ years of experience in web application development and data modeling. Skilled in JavaScript, React, and Python, with a strong ability to solve complex problems and implement scalable solutions. Demonstrated adaptability and initiative in professional office environments, fostering collaboration and efficient workflows. </p>
+        </div> */}
+        
       </div>
  )
      }

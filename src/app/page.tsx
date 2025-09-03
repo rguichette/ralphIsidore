@@ -25,7 +25,7 @@ export default function Page() {
     text-white
   "
 >
-  <HeaderIntro />
+  {/* <HeaderIntro /> */}
 </div>
 
     </main>
