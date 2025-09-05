@@ -1,4 +1,5 @@
 import HeaderIntro from "./components/headerIntro";
+import SkillsCarousel from "./components/SkillsCarousel";
 
 export default function Page() {
   return (
@@ -26,6 +27,8 @@ export default function Page() {
   "
 >
   <HeaderIntro />
+  
+  <SkillsCarousel/>
 </div>
 
     </main>
