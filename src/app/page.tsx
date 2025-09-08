@@ -1,4 +1,6 @@
 import HeaderIntro from "./components/headerIntro";
+import ProjectCard from "./components/ProjectCard";
+import ProjectSection from "./components/ProjectSection";
 import SkillsCarousel from "./components/SkillsCarousel";
 
 export default function Page() {
@@ -29,6 +31,8 @@ export default function Page() {
   <HeaderIntro />
   
   <SkillsCarousel/>
+<ProjectSection/>
+
 </div>
 
     </main>

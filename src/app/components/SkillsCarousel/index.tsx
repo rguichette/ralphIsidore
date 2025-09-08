@@ -18,7 +18,7 @@ export default function SkillsCarousel({ className = "", ...props }: SkillsCarou
   const plugin = React.useRef(Autoplay({ delay: 3000, stopOnInteraction: true }))
 
   return (
-    <div className={`w-full overflow-x-hidden p-8`} {...props}>
+    <div className={`w-full overflow-x-hidden p-6 mb-12`} {...props}>
       <Carousel plugins={[plugin.current]} className="w-full overflow-hidden touch-pan-y">
         <CarouselContent className="-ml-4">
           <CarouselItem className="basis-1/3 pl-4">
