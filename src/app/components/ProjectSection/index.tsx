@@ -1,6 +1,6 @@
 import ProjectCard from "../ProjectCard";
 
-let ProjectSection = () => {
+const ProjectSection = () => {
   return (
     <div className="mt-40">
       <h2 className="flex justify-center flex-wrap p-4">Projects</h2>
