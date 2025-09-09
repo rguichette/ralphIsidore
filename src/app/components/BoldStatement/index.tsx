@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import ContactModal from "../ContactModal"
-// import ContactModal from "./ContactModal"
 
 export default function BoldStatement() {
   const [contactOpen, setContactOpen] = useState(false)
+  const [showSummary, setShowSummary] = useState(false)
 
   return (
     <div className="relative z-10 w-full px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 py-10 md:py-16">
@@ -22,6 +22,7 @@ export default function BoldStatement() {
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          {/* Contact opens modal */}
           <Button
             size="lg"
             className="bg-amber-400 text-slate-900 hover:bg-amber-300"
@@ -30,6 +31,7 @@ export default function BoldStatement() {
             Contact
           </Button>
 
+          {/* Projects scrolls down */}
           <Button
             asChild
             size="lg"
@@ -38,9 +40,27 @@ export default function BoldStatement() {
             <a href="#projects">View Projects</a>
           </Button>
         </div>
+
+        {/* View Summary toggle */}
+        <button
+          onClick={() => setShowSummary((prev) => !prev)}
+          className="mt-6 text-sm font-medium text-amber-300 hover:text-amber-200 transition-colors"
+        >
+          {showSummary ? "Hide Summary" : "View Summary"}
+        </button>
+
+        {showSummary && (
+          <p className="mt-4 text-white/90 text-sm sm:text-base leading-relaxed">
+            Self-taught software developer with 3+ years of experience in web application
+            development and data modeling. Skilled in JavaScript, React, and Python, with a
+            strong ability to solve complex problems and implement scalable solutions.
+            Demonstrated adaptability and initiative in professional office environments,
+            fostering collaboration and efficient workflows.
+          </p>
+        )}
       </div>
 
-      {/* Modal lives here */}
+     
       <ContactModal isOpen={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   )
